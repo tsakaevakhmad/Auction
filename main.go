@@ -1,12 +1,14 @@
 package main
 
 import (
+	"Auction/services/dbcontext"
 	"fmt"
 	"go.uber.org/fx"
 	"net/http"
 )
 
 func main() {
+	dbcontext.Migrate()
 	fx.New(
 		Module,
 		fx.Invoke(func(mux *http.ServeMux) {
