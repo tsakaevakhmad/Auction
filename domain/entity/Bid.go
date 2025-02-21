@@ -8,13 +8,12 @@ import (
 
 type Bid struct {
 	ID        string  `gorm:"type:uuid;default:gen_random_uuid();primaryKey"`
-	UserID    string  `gorm:"type:uuid;not null"` // Внешний ключ на User
-	User      User    `gorm:"foreignKey:UserID;references:ID"`
-	LotID     string  `gorm:"type:uuid;not null"` // Внешний ключ на Lot
-	Lot       Lot     `gorm:"foreignKey:LotID;references:ID"`
 	Amount    float64 `gorm:"not null"`
 	CreatedAt time.Time
-	Bids      []Bid `gorm:"foreignKey:UserID"` // Связь с Bid
+	UserID    string `gorm:"type:uuid;not null"` // Внешний ключ на User
+	User      User   `gorm:"foreignKey:UserID;references:ID"`
+	LotID     string `gorm:"type:uuid;not null"` // Внешний ключ на Lot
+	Lot       Lot    `gorm:"foreignKey:LotID;references:ID"`
 }
 
 func (b *Bid) BeforeCreate(tx *gorm.DB) (err error) {

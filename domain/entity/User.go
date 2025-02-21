@@ -7,13 +7,14 @@ import (
 )
 
 type User struct {
-	ID        string     `gorm:"type:uuid;default:gen_random_uuid();primaryKey"`
-	Name      string     // A regular string field
-	Email     *string    // A pointer to a string, allowing for null values
-	Birthday  *time.Time // A pointer to time.Time, can be null
-	CreatedAt time.Time  // Automatically managed by GORM for creation time
-	UpdatedAt time.Time  // Automatically managed by GORM for update time
-	Roles     []Role     `gorm:"many2many:user_roles"`
+	ID        string `gorm:"type:uuid;default:gen_random_uuid();primaryKey"`
+	Name      string
+	Email     *string
+	Birthday  *time.Time
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	Bids      []Bid  `gorm:"foreignKey:UserID"`
+	Roles     []Role `gorm:"many2many:user_roles"`
 }
 
 func (u *User) BeforeCreate(tx *gorm.DB) (err error) {
