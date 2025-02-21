@@ -20,5 +20,5 @@ func Migrate() {
 	if err != nil {
 		panic(err)
 	}
-	db.AutoMigrate(&entity.User{}, &entity.Role{})
+	db.AutoMigrate(&entity.User{}, &entity.Role{}, &entity.Category{}, &entity.Lot{}, &entity.Photo{}, &entity.Bid{})
 }

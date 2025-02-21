@@ -20,5 +20,11 @@ func (u *User) BeforeCreate(tx *gorm.DB) (err error) {
 	if u.ID == "" {
 		u.ID = uuid.NewString()
 	}
+	u.CreatedAt = time.Now().UTC()
+	return
+}
+
+func (u *User) BeforeUpdate(tx *gorm.DB) (err error) {
+	u.UpdatedAt = time.Now().UTC()
 	return
 }
