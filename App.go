@@ -1,6 +1,8 @@
 package main
 
 import (
+	"Auction/handlers/Category"
+	"Auction/services/dbcontext"
 	"net/http"
 
 	"go.uber.org/fx"
@@ -13,6 +15,8 @@ func NewMux() *http.ServeMux {
 
 var Module = fx.Options(
 	fx.Provide(
+		dbcontext.NewPgContext,
+		Category.NewCreateCategoryHandler,
 		NewMux,
 	),
 )
