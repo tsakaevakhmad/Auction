@@ -1,10 +1,10 @@
 package main
 
 import (
+	"Auction/controllers"
 	"Auction/services/dbcontext"
-	"fmt"
+	"github.com/gin-gonic/gin"
 	"go.uber.org/fx"
-	"net/http"
 )
 
 func main() {
@@ -13,9 +13,10 @@ func main() {
 		fx.Invoke(func(pgdb *dbcontext.PgContext) {
 			pgdb.Migrate()
 		}),
-		fx.Invoke(func(mux *http.ServeMux) {
-			fmt.Println("Server started on :8080")
-			http.ListenAndServe(":8080", mux)
+		fx.Invoke(func(category *controllers.CategoryControler) {
+			router := gin.Default()
+			router.POST("/api/v1/category/create", category.Create)
+			router.Run(":8080")
 		}),
 	).Run()
 }

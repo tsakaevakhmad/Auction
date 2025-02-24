@@ -1,4 +1,4 @@
-package Category
+package category
 
 import (
 	"Auction/comands/category"
@@ -11,7 +11,7 @@ type CreateCategoryHandler struct {
 	pgContext *gorm.DB
 }
 
-func NewCreateCategoryHandler(ctx dbcontext.PgContext) *CreateCategoryHandler {
+func NewCreateCategoryHandler(ctx *dbcontext.PgContext) *CreateCategoryHandler {
 	return &CreateCategoryHandler{
 		pgContext: ctx.Context(),
 	}

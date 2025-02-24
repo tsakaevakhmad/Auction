@@ -1,22 +1,19 @@
 package main
 
 import (
-	"Auction/handlers/Category"
+	"Auction/controllers"
+	"Auction/handlers/category"
 	"Auction/services/dbcontext"
-	"net/http"
-
 	"go.uber.org/fx"
 )
 
-func NewMux() *http.ServeMux {
-	mux := http.NewServeMux()
-	return mux
-}
-
 var Module = fx.Options(
 	fx.Provide(
+		//Services
 		dbcontext.NewPgContext,
-		Category.NewCreateCategoryHandler,
-		NewMux,
+		category.NewCreateCategoryHandler,
+
+		//Controllers
+		controllers.NewCategoryControler,
 	),
 )
