@@ -1,3 +1,3 @@
-package queries
+package category
 
 type GetCategoryQuery struct{}

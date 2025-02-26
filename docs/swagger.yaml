@@ -1,0 +1,69 @@
+definitions:
+  category.CreateCategoryCommand:
+    properties:
+      name:
+        type: string
+      parentId:
+        type: string
+    type: object
+  category.GetCategoryQuery:
+    type: object
+  category.UpdateCategoryCommand:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      parentId:
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /api/v1/category/create:
+    post:
+      consumes:
+      - application/json
+      description: Добавляет категорию
+      parameters:
+      - description: Тело запроса
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/category.CreateCategoryCommand'
+      responses: {}
+      summary: Добавить категорию
+      tags:
+      - category
+  /api/v1/category/getall:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Тело запроса
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/category.GetCategoryQuery'
+      responses: {}
+      summary: Получить список категорий
+      tags:
+      - category
+  /api/v1/category/update:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Тело запроса
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/category.UpdateCategoryCommand'
+      responses: {}
+      summary: Обновить категорию
+      tags:
+      - category
+swagger: "2.0"

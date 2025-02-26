@@ -1,0 +1,108 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "contact": {}
+    },
+    "paths": {
+        "/api/v1/category/create": {
+            "post": {
+                "description": "Добавляет категорию",
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "category"
+                ],
+                "summary": "Добавить категорию",
+                "parameters": [
+                    {
+                        "description": "Тело запроса",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/category.CreateCategoryCommand"
+                        }
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/api/v1/category/getall": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "category"
+                ],
+                "summary": "Получить список категорий",
+                "parameters": [
+                    {
+                        "description": "Тело запроса",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/category.GetCategoryQuery"
+                        }
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/api/v1/category/update": {
+            "put": {
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "category"
+                ],
+                "summary": "Обновить категорию",
+                "parameters": [
+                    {
+                        "description": "Тело запроса",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/category.UpdateCategoryCommand"
+                        }
+                    }
+                ],
+                "responses": {}
+            }
+        }
+    },
+    "definitions": {
+        "category.CreateCategoryCommand": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "parentId": {
+                    "type": "string"
+                }
+            }
+        },
+        "category.GetCategoryQuery": {
+            "type": "object"
+        },
+        "category.UpdateCategoryCommand": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "parentId": {
+                    "type": "string"
+                }
+            }
+        }
+    }
+}

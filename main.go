@@ -7,10 +7,10 @@ import (
 
 func main() {
 	fx.New(
-		Module,
+		module,
+		server,
 		fx.Invoke(func(pgdb *dbcontext.PgContext) {
 			pgdb.Migrate()
 		}),
-		server,
 	).Run()
 }
