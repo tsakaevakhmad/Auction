@@ -36,6 +36,20 @@ paths:
       summary: Добавить категорию
       tags:
       - category
+  /api/v1/category/delete/{id}:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: Идентификатор категории
+        in: path
+        name: id
+        required: true
+        type: string
+      responses: {}
+      summary: Обновить категорию
+      tags:
+      - category
   /api/v1/category/getall:
     post:
       consumes:

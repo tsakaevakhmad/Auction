@@ -19,6 +19,7 @@ var module = fx.Options(
 		category.NewCreateCategoryHandler,
 		category.NewGetCategoryHandler,
 		category.NewUpdateCategoryHandler,
+		category.NewDeleteCategoryHandler,
 		//Controllers
 		controllers.NewCategoryControler,
 	),
@@ -30,5 +31,6 @@ var server = fx.Invoke(func(category *controllers.CategoryControler) {
 	router.POST(BasePath+"category/create", category.Create)
 	router.POST(BasePath+"category/getall", category.GetAll)
 	router.PUT(BasePath+"category/update", category.Update)
+	router.DELETE(BasePath+"category/delete/:id", category.Delete)
 	router.Run(":8080")
 })

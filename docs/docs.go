@@ -39,6 +39,27 @@ const docTemplate = `{
                 "responses": {}
             }
         },
+        "/api/v1/category/delete/{id}": {
+            "delete": {
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "category"
+                ],
+                "summary": "Обновить категорию",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Идентификатор категории",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {}
+            }
+        },
         "/api/v1/category/getall": {
             "post": {
                 "consumes": [
