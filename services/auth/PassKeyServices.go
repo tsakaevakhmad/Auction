@@ -4,6 +4,7 @@ import (
 	"Auction/domain/entity"
 	"Auction/services/dbcontext"
 	"github.com/gin-contrib/sessions"
+	_ "github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
 	"github.com/go-webauthn/webauthn/webauthn"
 	"gorm.io/gorm"

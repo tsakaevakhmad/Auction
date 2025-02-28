@@ -7,6 +7,8 @@ import (
 	"Auction/services/auth"
 	"Auction/services/dbcontext"
 	"github.com/gin-contrib/cors"
+	"github.com/gin-contrib/sessions"
+	"github.com/gin-contrib/sessions/cookie"
 	_ "github.com/gin-gonic/contrib/sessions"
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
@@ -38,6 +40,8 @@ var server = fx.Invoke(func(category *controllers.CategoryControler, auth *auth.
 		AllowHeaders:     []string{"Content-Type"},
 		AllowCredentials: true,
 	}))
+	store := cookie.NewStore([]byte("secret")) // Replace "secret" with your secret key
+	router.Use(sessions.Sessions("session_name", store))
 	router.POST("/register/begin", auth.BeginRegistration)
 	router.POST("/register/finish", auth.FinishRegistration)
 	router.POST("/login/begin", auth.BeginLogin)
