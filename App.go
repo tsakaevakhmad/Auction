@@ -14,6 +14,7 @@ import (
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"go.uber.org/fx"
+	"net/http"
 	_ "time"
 )
 
@@ -36,16 +37,25 @@ var server = fx.Invoke(func(category *controllers.CategoryControler, auth *auth.
 	router := gin.Default()
 	router.Use(cors.New(cors.Config{
 		AllowAllOrigins:  true, // Разрешенные источники
-		AllowMethods:     []string{"GET", "POST", "OPTIONS"},
-		AllowHeaders:     []string{"Content-Type"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Content-Type", "Authorization"},
 		AllowCredentials: true,
 	}))
 	store := cookie.NewStore([]byte("secret")) // Replace "secret" with your secret key
-	router.Use(sessions.Sessions("session_name", store))
-	router.POST("/register/begin", auth.BeginRegistration)
-	router.POST("/register/finish", auth.FinishRegistration)
-	router.POST("/login/begin", auth.BeginLogin)
-	router.POST("/login/finish", auth.FinishLogin)
+	store.Options(sessions.Options{
+		Path:     "/",
+		MaxAge:   3600,                 // Время жизни cookie
+		HttpOnly: true,                 // Запрещает доступ к cookie через JavaScript
+		Secure:   true,                 // Требует HTTPS
+		SameSite: http.SameSiteLaxMode, // Разрешает отправку cookie между разными доменами
+		Domain:   "localhost",
+	})
+	router.Use(sessions.Sessions("passKey", store))
+	router.Static("/static", "./static")
+	router.POST("/register/begin/:username", auth.BeginRegistration)
+	router.POST("/register/finish/:username", auth.FinishRegistration)
+	router.POST("/login/begin/:username", auth.BeginLogin)
+	router.POST("/login/finish/:username", auth.FinishLogin)
 
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	router.POST(BasePath+"category/create", category.Create)

@@ -3,6 +3,8 @@ package auth
 import (
 	"Auction/domain/entity"
 	"Auction/services/dbcontext"
+	"encoding/gob"
+	"fmt"
 	"github.com/gin-contrib/sessions"
 	_ "github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
@@ -12,6 +14,10 @@ import (
 	"net/http"
 )
 
+func init() {
+	gob.Register(webauthn.SessionData{})
+}
+
 type PassKeyService struct {
 	db      *gorm.DB
 	webAuth *webauthn.WebAuthn
@@ -20,8 +26,8 @@ type PassKeyService struct {
 func NewPasskeyService(db *dbcontext.PgContext) *PassKeyService {
 	webauthn, err := webauthn.New(&webauthn.Config{
 		RPDisplayName: "Auction",
-		RPID:          "webauthn",
-		RPOrigins:     []string{"https://webauthn.me"},
+		RPID:          "localhost",
+		RPOrigins:     []string{"http://localhost:8080"},
 	})
 	if err != nil {
 		log.Fatal(err)
@@ -33,18 +39,10 @@ func NewPasskeyService(db *dbcontext.PgContext) *PassKeyService {
 	}
 }
 
-type registerRequest struct {
-	Name string `json:"name"`
-}
-
 func (pks PassKeyService) BeginRegistration(c *gin.Context) {
-	var req registerRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
-		return
-	}
+	var username = c.Param("username")
 	var user entity.User
-	pks.db.First(&user, "email = ?", req.Name)
+	pks.db.First(&user, "email = ?", username)
 	options, sessionData, err := pks.webAuth.BeginRegistration(user)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -52,28 +50,31 @@ func (pks PassKeyService) BeginRegistration(c *gin.Context) {
 	}
 
 	session := sessions.Default(c)
-	session.Set("sessionData", sessionData)
 
+	session.Set("sessionData", sessionData)
+	err = session.Save()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
 	c.JSON(http.StatusOK, options)
 }
 
 func (pks PassKeyService) FinishRegistration(c *gin.Context) {
-	var req registerRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
-		return
-	}
+	var username = c.Param("username")
 	var user entity.User
-	pks.db.First(&user, "email = ?", req.Name)
+	pks.db.First(&user, "email = ?", username)
 	// Загружаем sessionData из сессии
 	session := sessions.Default(c)
-	sessionData, ok := session.Get("sessionData").(*webauthn.SessionData)
-	if !ok || sessionData == nil {
+	fmt.Println("Session keys:", session.ID())
+
+	sessionData, ok := session.Get("sessionData").(webauthn.SessionData)
+	if !ok {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Session data not found"})
 		return
 	}
 
-	credential, err := pks.webAuth.FinishRegistration(user, *sessionData, c.Request)
+	credential, err := pks.webAuth.FinishRegistration(user, sessionData, c.Request)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
