@@ -109,12 +109,10 @@ func (pks PassKeyService) FinishLogin(c *gin.Context) {
 	pks.db.First(&user, "email = ?", username)
 	session := sessions.Default(c)
 	sessionData := session.Get("sessionData").(webauthn.SessionData)
-	credential, err := pks.webAuth.FinishLogin(user, sessionData, c.Request)
+	_, err := pks.webAuth.FinishLogin(user, sessionData, c.Request)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}
-	user.Credentials = append(user.Credentials, *credential)
-	pks.db.Save(&user)
 	c.JSON(http.StatusOK, gin.H{"message": "Login successful!"})
 }
