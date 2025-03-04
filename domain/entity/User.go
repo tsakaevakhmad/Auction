@@ -16,7 +16,7 @@ type User struct {
 	UpdatedAt   time.Time
 	Bids        []Bid                 `gorm:"foreignKey:UserID"`
 	Roles       []Role                `gorm:"many2many:user_roles"`
-	Credentials []webauthn.Credential `gorm:"type:jsonb"`
+	Credentials []webauthn.Credential `gorm:"type:jsonb;serializer:json"`
 }
 
 func (u *User) BeforeCreate(tx *gorm.DB) (err error) {

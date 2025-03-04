@@ -84,32 +84,37 @@ func (pks PassKeyService) FinishRegistration(c *gin.Context) {
 	pks.db.Save(&user)
 	// Очищаем sessionData из сессии
 	session.Delete("sessionData")
-	session.Save()
 	c.JSON(http.StatusOK, gin.H{"message": "Passkey registered!"})
 }
 
 func (pks PassKeyService) BeginLogin(c *gin.Context) {
-	/*user := getUserFromDB("user@example.com")
+	var username = c.Param("username")
+	var user entity.User
+	pks.db.Preload("Credentials").First(&user, "email = ?", username)
 
-	options, sessionData, err := webAuthn.BeginLogin(user)
+	options, sessionData, err := pks.webAuth.BeginLogin(user)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-
-	saveSessionData(sessionData)
-	c.JSON(http.StatusOK, options)*/
+	session := sessions.Default(c)
+	session.Set("sessionData", sessionData)
+	err = session.Save()
+	c.JSON(http.StatusOK, options)
 }
 
 func (pks PassKeyService) FinishLogin(c *gin.Context) {
-	/*user := getUserFromDB("user@example.com")
-	sessionData := getSessionData()
-
-	credential, err := webAuthn.FinishLogin(user, *sessionData, c.Request)
+	var username = c.Param("username")
+	var user entity.User
+	pks.db.First(&user, "email = ?", username)
+	session := sessions.Default(c)
+	sessionData := session.Get("sessionData").(webauthn.SessionData)
+	credential, err := pks.webAuth.FinishLogin(user, sessionData, c.Request)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}
-
-	c.JSON(http.StatusOK, gin.H{"message": "Login successful!"})*/
+	user.Credentials = append(user.Credentials, *credential)
+	pks.db.Save(&user)
+	c.JSON(http.StatusOK, gin.H{"message": "Login successful!"})
 }

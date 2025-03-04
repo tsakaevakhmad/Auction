@@ -10,7 +10,6 @@
 <input type="text" id="username" placeholder="Enter your email" />
 <button onclick="beginRegistration()">Register</button>
 <button onclick="beginLogin()">Login</button>
-<button onclick="finishLogin()">Finish Login</button>
 
 <script>
     async function beginRegistration() {
@@ -84,11 +83,10 @@
 
     async function beginLogin() {
         const name = document.getElementById('username').value;
-        const response = await fetch('http://localhost:8080/login/begin', {
+        const response = await fetch('http://localhost:8080/login/begin/' + name, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: "include",
-            body: JSON.stringify({ name })
         });
 
         if (!response.ok) {
@@ -96,20 +94,28 @@
             return;
         }
 
+
         const options = await response.json();
-        const credential = await navigator.credentials.get({ publicKey: options });
-        localStorage.setItem("passkey_login", JSON.stringify(credential));
+        console.log(options)
+        options.publicKey.challenge = base64UrlToUint8Array(options.publicKey.challenge);
+        options.publicKey.allowCredentials.forEach(function (listItem) {
+            listItem.id = base64UrlToUint8Array(listItem.id)
+        });
+        const credential = await navigator.credentials.get({ publicKey: options.publicKey });
+        console.log(credential)
+        //localStorage.setItem("passkey_login", JSON.stringify(credential));
+        await finishLogin(name, credential);
         alert("Proceed with Finish Login");
     }
 
-    async function finishLogin() {
-        const credential = JSON.parse(localStorage.getItem("passkey_login"));
+    async function finishLogin(name, credential) {
+        //const credential = JSON.parse(localStorage.getItem("passkey_login"));
         if (!credential) {
             alert("No credential found");
             return;
         }
 
-        const response = await fetch('http://localhost:8080/login/finish', {
+        const response = await fetch('http://localhost:8080/login/finish/' + name, {
             method: 'POST',
             credentials: "include",
             headers: { 'Content-Type': 'application/json' },
