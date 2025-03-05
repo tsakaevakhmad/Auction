@@ -1,0 +1,12 @@
+database:
+  connectionString: "host=localhost user=postgres password=password dbname=auctiondb port=5432 sslmode=disable"
+
+server:
+  domain: "localhost"
+  allowOrigins: ["http://localhost", "http://10.20.0.73", "https://10.20.0.73"]
+  port: 8080
+
+jwtConfig:
+  expirationDateInMinutes: 60
+  refreshTokenExpirationInMinutes: 7200
+  secret: "ahfdgsfjgsdfguigewfibibv124689214j12vb4j1k2v4jk12v4kj1"

@@ -3,9 +3,12 @@ package main
 import (
 	"Auction/controllers"
 	_ "Auction/docs"
+	"Auction/domain/configurations"
 	"Auction/handlers/category"
+	"Auction/services/Configuration"
 	"Auction/services/auth"
 	"Auction/services/dbcontext"
+	"fmt"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
@@ -28,15 +31,18 @@ var module = fx.Options(
 		category.NewUpdateCategoryHandler,
 		category.NewDeleteCategoryHandler,
 		auth.NewPasskeyService,
+		auth.NewJWTServices,
 		//Controllers
 		controllers.NewCategoryControler,
 	),
 )
 
 var server = fx.Invoke(func(category *controllers.CategoryControler, auth *auth.PassKeyService) {
+	var cfg *configurations.MainConfig
+	Configuration.ReadFile(&cfg)
 	router := gin.Default()
 	router.Use(cors.New(cors.Config{
-		AllowAllOrigins:  true, // Разрешенные источники
+		AllowOrigins:     cfg.Server.AllowOrigins, // Разрешенные источники
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Content-Type", "Authorization"},
 		AllowCredentials: true,
@@ -46,9 +52,9 @@ var server = fx.Invoke(func(category *controllers.CategoryControler, auth *auth.
 		Path:     "/",
 		MaxAge:   3600,                 // Время жизни cookie
 		HttpOnly: true,                 // Запрещает доступ к cookie через JavaScript
-		Secure:   true,                 // Требует HTTPS
+		Secure:   false,                // Требует HTTPS
 		SameSite: http.SameSiteLaxMode, // Разрешает отправку cookie между разными доменами
-		Domain:   "localhost",
+		Domain:   cfg.Server.Domain,
 	})
 	router.Use(sessions.Sessions("passKey", store))
 	router.Static("/static", "./static")
@@ -62,5 +68,5 @@ var server = fx.Invoke(func(category *controllers.CategoryControler, auth *auth.
 	router.POST(BasePath+"category/getall", category.GetAll)
 	router.PUT(BasePath+"category/update", category.Update)
 	router.DELETE(BasePath+"category/delete/:id", category.Delete)
-	router.Run(":8080")
+	router.Run(fmt.Sprint(":", cfg.Server.Port))
 })

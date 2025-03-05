@@ -12,7 +12,7 @@
 <button onclick="beginLogin()">Login</button>
 
 <script>
-    let base = "http://10.20.0.73:8080/"
+    let base = "http://localhost:8080/"
     async function beginRegistration() {
         const name = document.getElementById('username').value;
         const response = await fetch(base + 'register/begin/'+name, {

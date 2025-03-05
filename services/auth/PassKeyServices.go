@@ -21,13 +21,14 @@ func init() {
 type PassKeyService struct {
 	db      *gorm.DB
 	webAuth *webauthn.WebAuthn
+	jwt     *JWTServices
 }
 
-func NewPasskeyService(db *dbcontext.PgContext) *PassKeyService {
+func NewPasskeyService(db *dbcontext.PgContext, jwt *JWTServices) *PassKeyService {
 	webauthn, err := webauthn.New(&webauthn.Config{
 		RPDisplayName: "Auction",
 		RPID:          "localhost",
-		RPOrigins:     []string{"http://localhost:8080"},
+		RPOrigins:     []string{"http://10.20.0.73", "http://localhost:8080"},
 	})
 	if err != nil {
 		log.Fatal(err)
@@ -36,6 +37,7 @@ func NewPasskeyService(db *dbcontext.PgContext) *PassKeyService {
 	return &PassKeyService{
 		db.Context(),
 		webauthn,
+		jwt,
 	}
 }
 
@@ -50,7 +52,6 @@ func (pks PassKeyService) BeginRegistration(c *gin.Context) {
 	}
 
 	session := sessions.Default(c)
-
 	session.Set("sessionData", sessionData)
 	err = session.Save()
 	if err != nil {
@@ -110,9 +111,11 @@ func (pks PassKeyService) FinishLogin(c *gin.Context) {
 	session := sessions.Default(c)
 	sessionData := session.Get("sessionData").(webauthn.SessionData)
 	_, err := pks.webAuth.FinishLogin(user, sessionData, c.Request)
+	token, err := pks.jwt.GenerateAccessToken(user.ID)
+	refreshToken, err := pks.jwt.GenerateRefreshToken(user.ID)
+
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
-		return
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "Login successful!"})
+	c.JSON(http.StatusOK, gin.H{"token": token, "refreshToken": refreshToken})
 }

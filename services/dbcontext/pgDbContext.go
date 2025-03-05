@@ -1,7 +1,9 @@
 package dbcontext
 
 import (
+	"Auction/domain/configurations"
 	"Auction/domain/entity"
+	"Auction/services/Configuration"
 	"context"
 	"fmt"
 	"go.uber.org/fx"
@@ -14,7 +16,9 @@ type PgContext struct {
 }
 
 func NewPgContext(lc fx.Lifecycle) *PgContext {
-	dsn := "host=localhost user=postgres password=password dbname=auctiondb port=5432 sslmode=disable"
+	var mainConfig *configurations.MainConfig
+	Configuration.ReadFile(&mainConfig)
+	dsn := mainConfig.Database.ConnectionString
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		panic("failed to connect database")
