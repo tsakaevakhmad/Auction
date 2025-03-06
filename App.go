@@ -37,7 +37,7 @@ var module = fx.Options(
 	),
 )
 
-var server = fx.Invoke(func(category *controllers.CategoryControler, auth *auth.PassKeyService) {
+var server = fx.Invoke(func(category *controllers.CategoryControler, auth *auth.PassKeyService, jwtServices *auth.JWTServices) {
 	var cfg *configurations.MainConfig
 	Configuration.ReadFile(&cfg)
 	router := gin.Default()
@@ -58,15 +58,20 @@ var server = fx.Invoke(func(category *controllers.CategoryControler, auth *auth.
 	})
 	router.Use(sessions.Sessions("passKey", store))
 	router.Static("/static", "./static")
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+
 	router.POST("/register/begin/:username", auth.BeginRegistration)
 	router.POST("/register/finish/:username", auth.FinishRegistration)
 	router.POST("/login/begin/:username", auth.BeginLogin)
 	router.POST("/login/finish/:username", auth.FinishLogin)
 
-	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-	router.POST(BasePath+"category/create", category.Create)
+	authorizedAdmin := router.Group(BasePath)
+	authorizedAdmin.Use(jwtServices.AuthMiddleware("admin"))
+	{
+		authorizedAdmin.POST("category/create", category.Create)
+		authorizedAdmin.PUT("category/update", category.Update)
+		authorizedAdmin.DELETE("category/delete/:id", category.Delete)
+	}
 	router.POST(BasePath+"category/getall", category.GetAll)
-	router.PUT(BasePath+"category/update", category.Update)
-	router.DELETE(BasePath+"category/delete/:id", category.Delete)
 	router.Run(fmt.Sprint(":", cfg.Server.Port))
 })

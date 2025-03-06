@@ -6,9 +6,11 @@ import (
 	"Auction/services/Configuration"
 	"Auction/services/dbcontext"
 	"errors"
+	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"gorm.io/gorm"
 	"log"
+	"net/http"
 	"strings"
 	"time"
 )
@@ -69,7 +71,7 @@ func (service JWTServices) VerifyRefreshToken(tokenString string) (*jwt.Token, j
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, errors.New("unexpected signing method")
 		}
-		return service.cfg.Secret, nil
+		return []byte(service.cfg.Secret), nil
 	})
 
 	if err != nil {
@@ -94,7 +96,7 @@ func (service JWTServices) VerifyAccessToken(tokenString string, roles ...string
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, errors.New("unexpected signing method")
 		}
-		return service.cfg.Secret, nil
+		return []byte(service.cfg.Secret), nil
 	})
 
 	if err != nil {
@@ -111,7 +113,14 @@ func (service JWTServices) VerifyAccessToken(tokenString string, roles ...string
 		}
 
 		if len(roles) > 0 {
-			userRoles, ok := claims["role"].(string)
+			var userRoles []string
+			if roles, ok := claims["roles"].([]interface{}); ok {
+				for _, r := range roles {
+					if roleStr, valid := r.(string); valid {
+						userRoles = append(userRoles, roleStr)
+					}
+				}
+			}
 			if !ok {
 				return nil, nil, errors.New("role not found in token")
 			}
@@ -125,10 +134,44 @@ func (service JWTServices) VerifyAccessToken(tokenString string, roles ...string
 	return nil, nil, errors.New("invalid token")
 }
 
-func contains(slice []string, item string) bool {
+func (service JWTServices) AuthMiddleware(requiredRoles ...string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		authHeader := c.GetHeader("Authorization")
+
+		if authHeader == "" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header is required"})
+			c.Abort()
+			return
+		}
+
+		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
+		if tokenString == authHeader {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token format"})
+			c.Abort()
+			return
+		}
+
+		_, claims, err := service.VerifyAccessToken(tokenString, requiredRoles...)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+			c.Abort()
+			return
+		}
+
+		if userID, ok := claims["sub"].(string); ok {
+			c.Set("userID", userID)
+		}
+
+		c.Next()
+	}
+}
+
+func contains(slice []string, item []string) bool {
 	for _, v := range slice {
-		if strings.EqualFold(v, item) {
-			return true
+		for _, v2 := range item {
+			if strings.EqualFold(v, v2) {
+				return true
+			}
 		}
 	}
 	return false
