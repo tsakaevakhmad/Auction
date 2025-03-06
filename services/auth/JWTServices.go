@@ -67,24 +67,14 @@ func (service JWTServices) GenerateRefreshToken(userId string) (string, error) {
 }
 
 func (service JWTServices) VerifyRefreshToken(tokenString string) (*jwt.Token, jwt.MapClaims, error) {
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, errors.New("unexpected signing method")
-		}
-		return []byte(service.cfg.Secret), nil
-	})
-
+	token, err := service.parseToken(tokenString)
 	if err != nil {
 		return nil, nil, err
 	}
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		if exp, ok := claims["exp"].(float64); ok {
-			if time.Now().Unix() > int64(exp) {
-				return nil, nil, errors.New("token expired")
-			}
-		} else {
-			return nil, nil, errors.New("invalid token format")
+		if !checkExpiration(claims) {
+			return nil, nil, errors.New("token expired")
 		}
 		return token, claims, nil
 	}
@@ -92,42 +82,17 @@ func (service JWTServices) VerifyRefreshToken(tokenString string) (*jwt.Token, j
 }
 
 func (service JWTServices) VerifyAccessToken(tokenString string, roles ...string) (*jwt.Token, jwt.MapClaims, error) {
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, errors.New("unexpected signing method")
-		}
-		return []byte(service.cfg.Secret), nil
-	})
-
+	token, err := service.parseToken(tokenString)
 	if err != nil {
 		return nil, nil, err
 	}
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		if exp, ok := claims["exp"].(float64); ok {
-			if time.Now().Unix() > int64(exp) {
-				return nil, nil, errors.New("token expired")
-			}
-		} else {
-			return nil, nil, errors.New("invalid token format")
+		if !checkExpiration(claims) {
+			return nil, nil, errors.New("token expired")
 		}
-
-		if len(roles) > 0 {
-			var userRoles []string
-			if roles, ok := claims["roles"].([]interface{}); ok {
-				for _, r := range roles {
-					if roleStr, valid := r.(string); valid {
-						userRoles = append(userRoles, roleStr)
-					}
-				}
-			}
-			if !ok {
-				return nil, nil, errors.New("role not found in token")
-			}
-
-			if !contains(roles, userRoles) {
-				return nil, nil, errors.New("user does not have required role")
-			}
+		if !checkRoles(claims, roles) {
+			return nil, nil, errors.New("invalid token roles")
 		}
 		return token, claims, nil
 	}
@@ -164,6 +129,42 @@ func (service JWTServices) AuthMiddleware(requiredRoles ...string) gin.HandlerFu
 
 		c.Next()
 	}
+}
+
+func (service JWTServices) parseToken(tokenString string) (*jwt.Token, error) {
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, errors.New("unexpected signing method")
+		}
+		return []byte(service.cfg.Secret), nil
+	})
+	return token, err
+}
+
+func checkExpiration(claims jwt.MapClaims) bool {
+	if exp, ok := claims["exp"].(float64); ok {
+		if time.Now().Unix() > int64(exp) {
+			return false
+		}
+	} else {
+		return false
+	}
+	return true
+}
+
+func checkRoles(claims jwt.MapClaims, roles []string) bool {
+	if len(roles) > 0 {
+		var userRoles []string
+		if roles, ok := claims["roles"].([]interface{}); ok {
+			for _, r := range roles {
+				if roleStr, valid := r.(string); valid {
+					userRoles = append(userRoles, roleStr)
+				}
+			}
+		}
+		return contains(roles, userRoles)
+	}
+	return true
 }
 
 func contains(slice []string, item []string) bool {
