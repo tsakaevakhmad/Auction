@@ -40,7 +40,7 @@ func (cc *CategoryControler) Create(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err})
 		return
 	}
-	cc.createHandler.Handle(cmd)
+	cc.createHandler.Handler(cmd)
 }
 
 // @Summary Получить список категорий

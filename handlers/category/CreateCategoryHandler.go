@@ -17,7 +17,7 @@ func NewCreateCategoryHandler(ctx *dbcontext.PgContext) *CreateCategoryHandler {
 	}
 }
 
-func (cch *CreateCategoryHandler) Handle(command category.CreateCategoryCommand) error {
+func (cch *CreateCategoryHandler) Handler(command category.CreateCategoryCommand) error {
 	category := &entity.Category{
 		Name:     command.Name,
 		ParentID: command.ParentId,

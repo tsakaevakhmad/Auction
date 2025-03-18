@@ -41,37 +41,40 @@ var server = fx.Invoke(func(category *controllers.CategoryControler, auth *auth.
 	var cfg *configurations.MainConfig
 	Configuration.ReadFile(&cfg)
 	router := gin.Default()
-	router.Use(cors.New(cors.Config{
-		AllowOrigins:     cfg.Server.AllowOrigins, // Разрешенные источники
-		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowHeaders:     []string{"Content-Type", "Authorization"},
-		AllowCredentials: true,
-	}))
-	store := cookie.NewStore([]byte("secret")) // Replace "secret" with your secret key
-	store.Options(sessions.Options{
-		Path:     "/",
-		MaxAge:   3600,                 // Время жизни cookie
-		HttpOnly: true,                 // Запрещает доступ к cookie через JavaScript
-		Secure:   false,                // Требует HTTPS
-		SameSite: http.SameSiteLaxMode, // Разрешает отправку cookie между разными доменами
-		Domain:   cfg.Server.Domain,
-	})
-	router.Use(sessions.Sessions("passKey", store))
-	router.Static("/static", "./static")
-	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-
+	additionalRouterFunctions(router, cfg)
+	authorizedAdmin := router.Group(BasePath)
 	router.POST("/register/begin/:username", auth.BeginRegistration)
 	router.POST("/register/finish/:username", auth.FinishRegistration)
 	router.POST("/login/begin/:username", auth.BeginLogin)
 	router.POST("/login/finish/:username", auth.FinishLogin)
 
-	authorizedAdmin := router.Group(BasePath)
 	authorizedAdmin.Use(jwtServices.AuthMiddleware("admin"))
 	{
 		authorizedAdmin.POST("category/create", category.Create)
 		authorizedAdmin.PUT("category/update", category.Update)
 		authorizedAdmin.DELETE("category/delete/:id", category.Delete)
+		router.POST(BasePath+"category/getall", category.GetAll)
 	}
-	router.POST(BasePath+"category/getall", category.GetAll)
 	router.Run(fmt.Sprint(":", cfg.Server.Port))
 })
+
+func additionalRouterFunctions(router *gin.Engine, cfg *configurations.MainConfig) {
+	router.Use(cors.New(cors.Config{
+		AllowOrigins:     cfg.Server.AllowOrigins,
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Content-Type", "Authorization"},
+		AllowCredentials: true,
+	}))
+	store := cookie.NewStore([]byte("secret"))
+	store.Options(sessions.Options{
+		Path:     "/",
+		MaxAge:   3600,
+		HttpOnly: true,
+		Secure:   false,
+		SameSite: http.SameSiteLaxMode,
+		Domain:   cfg.Server.Domain,
+	})
+	router.Use(sessions.Sessions("passKey", store))
+	router.Static("/static", "./static")
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+}
