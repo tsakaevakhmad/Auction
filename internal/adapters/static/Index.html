@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebAuthn Test</title>
+</head>
+<body>
+<h1>WebAuthn Test</h1>
+<input type="text" id="username" placeholder="Enter your email" />
+<button onclick="beginRegistration()">Register</button>
+<button onclick="beginLogin()">Login</button>
+
+<script>
+    let base = "http://localhost:8080/"
+    async function beginRegistration() {
+        const name = document.getElementById('username').value;
+        const response = await fetch(base + 'register/begin/'+name, {
+            method: 'POST',
+            credentials: "include",
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name })
+        });
+
+        if (!response.ok) {
+            alert("Failed to start registration");
+            return;
+        }
+
+        const options = await response.json();
+        // Преобразование challenge в ArrayBuffer
+        options.publicKey.challenge = base64UrlToUint8Array(options.publicKey.challenge);
+
+        // Преобразование user.id в ArrayBuffer
+        options.publicKey.user.id = base64UrlToUint8Array(options.publicKey.user.id);
+
+        const publicKey = options.publicKey;
+        console.log({publicKey})
+        try {
+            const credential = await navigator.credentials.create({ publicKey });
+            localStorage.setItem("passkey", JSON.stringify(credential));
+            await finishRegistration(name)
+            alert("Proceed with Finish Registration");
+        } catch (error) {
+            console.error("WebAuthn error:", error);
+            alert("Error during WebAuthn registration: " + error.message);
+        }
+    }
+
+    // Функция для декодирования Base64URL в Uint8Array
+    function base64UrlToUint8Array(base64Url) {
+        console.log(base64Url)
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const binary = atob(base64);
+        const len = binary.length;
+        const buffer = new Uint8Array(len);
+        for (let i = 0; i < len; i++) {
+            buffer[i] = binary.charCodeAt(i);
+        }
+        return buffer;
+    }
+
+
+    async function finishRegistration(name) {
+        const credential = JSON.parse(localStorage.getItem("passkey"));
+        if (!credential) {
+            alert("No credential found");
+            return;
+        }
+
+        const response = await fetch(base + 'register/finish/'+name, {
+            method: 'POST',
+            credentials: "include",
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(credential)
+        });
+
+        if (!response.ok) {
+            alert("Failed to finish registration");
+            return;
+        }
+
+        alert("Passkey registered successfully!");
+    }
+
+    async function beginLogin() {
+        const name = document.getElementById('username').value;
+        const response = await fetch(base + 'login/begin/' + name, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: "include",
+        });
+
+        if (!response.ok) {
+            alert("Failed to start login");
+            return;
+        }
+
+
+        const options = await response.json();
+        console.log(options)
+        options.publicKey.challenge = base64UrlToUint8Array(options.publicKey.challenge);
+        options.publicKey.allowCredentials.forEach(function (listItem) {
+            listItem.id = base64UrlToUint8Array(listItem.id)
+        });
+        const credential = await navigator.credentials.get({ publicKey: options.publicKey });
+        console.log(credential)
+        //localStorage.setItem("passkey_login", JSON.stringify(credential));
+        await finishLogin(name, credential);
+        alert("Proceed with Finish Login");
+    }
+
+    async function finishLogin(name, credential) {
+        //const credential = JSON.parse(localStorage.getItem("passkey_login"));
+        if (!credential) {
+            alert("No credential found");
+            return;
+        }
+
+        const response = await fetch(base + 'login/finish/' + name, {
+            method: 'POST',
+            credentials: "include",
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(credential)
+        });
+
+        if (!response.ok) {
+            alert("Failed to finish login");
+            return;
+        }
+
+        alert("Login successful!");
+    }
+</script>
+</body>
+</html>
