@@ -1,4 +1,4 @@
-package configurations
+package config
 
 type MainConfig struct {
 	Database struct {

@@ -1,12 +1,13 @@
 package ports
 
 import (
-	"Auction/internal/core/domain/entity"
+	"Auction/internal/core/domain/dto/category"
 )
 
-type icategoryService interface {
-	CreateCategory(name string, parentId *string, childs ...[]string) error
+type IСategoryServices interface {
+	CreateCategory(data category.CreateCategory) error
 	DeleteCategory(id string) error
-	GetCategory(id string) (entity.Category, error)
-	GetCategories() ([]entity.Category, error)
+	GetCategory(id string) (*category.CategoryDto, error)
+	GetCategories() ([]category.CategoryDto, error)
+	UpdateCategory(data category.UpdateCategory) error
 }

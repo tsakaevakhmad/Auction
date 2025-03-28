@@ -1,10 +1,9 @@
 package auth
 
 import (
-	"Auction/domain/configurations"
-	"Auction/domain/entity"
-	"Auction/services/Configuration"
-	"Auction/services/dbcontext"
+	dbcontext "Auction/internal/adapters/db"
+	configurations "Auction/internal/config"
+	"Auction/internal/core/domain/entity"
 	"errors"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
@@ -22,7 +21,7 @@ type JWTServices struct {
 
 func NewJWTServices(db *dbcontext.PgContext) *JWTServices {
 	var cfg *configurations.MainConfig
-	Configuration.ReadFile(&cfg)
+	configurations.ReadFile(&cfg)
 	return &JWTServices{cfg: &cfg.JWTConfig, db: db.Context()}
 }
 

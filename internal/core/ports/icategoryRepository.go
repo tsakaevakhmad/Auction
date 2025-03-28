@@ -1,10 +1,13 @@
 package ports
 
-import "Auction/internal/core/domain/dto/category"
+import (
+	"Auction/internal/core/domain/entity"
+)
 
-type icategoryRepository interface {
-	CreateCategory(name string, parentId *string, childs ...[]string) error
+type ICategoryRepository interface {
+	CreateCategory(name string, parentId *string, childs ...string) error
 	DeleteCategory(id string) error
-	GetCategory(id string) (*category.CategoryDto, error)
-	GetCategories() ([]category.CategoryDto, error)
+	FindCategory(id string) (*entity.Category, error)
+	FindCategories() ([]entity.Category, error)
+	UpdateCategory(category entity.Category) error
 }

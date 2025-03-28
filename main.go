@@ -1,7 +1,7 @@
 package main
 
 import (
-	"Auction/services/dbcontext"
+	dbcontext "Auction/internal/adapters/db"
 	"go.uber.org/fx"
 )
 

@@ -15,6 +15,27 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/api/v1/category/Get/{id}": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "category"
+                ],
+                "summary": "Получить категорию",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Идентификатор категории",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {}
+            }
+        },
         "/api/v1/category/create": {
             "post": {
                 "description": "Добавляет категорию",
@@ -32,7 +53,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/category.CreateCategoryCommand"
+                            "$ref": "#/definitions/category.CreateCategory"
                         }
                     }
                 ],
@@ -69,17 +90,6 @@ const docTemplate = `{
                     "category"
                 ],
                 "summary": "Получить список категорий",
-                "parameters": [
-                    {
-                        "description": "Тело запроса",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/category.GetCategoryQuery"
-                        }
-                    }
-                ],
                 "responses": {}
             }
         },
@@ -99,7 +109,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/category.UpdateCategoryCommand"
+                            "$ref": "#/definitions/category.UpdateCategory"
                         }
                     }
                 ],
@@ -108,9 +118,15 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "category.CreateCategoryCommand": {
+        "category.CreateCategory": {
             "type": "object",
             "properties": {
+                "childs": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "name": {
                     "type": "string"
                 },
@@ -119,10 +135,7 @@ const docTemplate = `{
                 }
             }
         },
-        "category.GetCategoryQuery": {
-            "type": "object"
-        },
-        "category.UpdateCategoryCommand": {
+        "category.UpdateCategory": {
             "type": "object",
             "properties": {
                 "id": {

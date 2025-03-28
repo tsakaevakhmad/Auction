@@ -1,13 +1,13 @@
 package main
 
 import (
-	"Auction/controllers"
 	_ "Auction/docs"
-	"Auction/domain/configurations"
-	"Auction/handlers/category"
-	"Auction/services/Configuration"
-	"Auction/services/auth"
-	"Auction/services/dbcontext"
+	dbcontext "Auction/internal/adapters/db"
+	"Auction/internal/adapters/http/controllers"
+	"Auction/internal/adapters/repositories"
+	configurations "Auction/internal/config"
+	"Auction/internal/core/services"
+	"Auction/internal/core/services/auth"
 	"fmt"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/sessions"
@@ -24,22 +24,21 @@ import (
 var BasePath = "/api/v1/"
 var module = fx.Options(
 	fx.Provide(
+		//Repo
+		repositories.NewCategoryRepository,
 		//Services
 		dbcontext.NewPgContext,
-		category.NewCreateCategoryHandler,
-		category.NewGetCategoryHandler,
-		category.NewUpdateCategoryHandler,
-		category.NewDeleteCategoryHandler,
+		services.NewCategoryServices,
 		auth.NewPasskeyService,
 		auth.NewJWTServices,
 		//Controllers
-		controllers.NewCategoryControler,
+		controllers.NewCategoryController,
 	),
 )
 
-var server = fx.Invoke(func(category *controllers.CategoryControler, auth *auth.PassKeyService, jwtServices *auth.JWTServices) {
+var server = fx.Invoke(func(category *controllers.CategoryController, auth *auth.PassKeyService, jwtServices *auth.JWTServices) {
 	var cfg *configurations.MainConfig
-	Configuration.ReadFile(&cfg)
+	configurations.ReadFile(&cfg)
 	router := gin.Default()
 	additionalRouterFunctions(router, cfg)
 	authorizedAdmin := router.Group(BasePath)
@@ -75,6 +74,6 @@ func additionalRouterFunctions(router *gin.Engine, cfg *configurations.MainConfi
 		Domain:   cfg.Server.Domain,
 	})
 	router.Use(sessions.Sessions("passKey", store))
-	router.Static("/static", "./static")
+	router.Static("/static", "./internal/adapters/static")
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 }

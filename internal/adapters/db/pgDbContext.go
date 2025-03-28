@@ -1,9 +1,8 @@
 package dbcontext
 
 import (
-	"Auction/domain/configurations"
-	"Auction/domain/entity"
-	"Auction/services/Configuration"
+	configurations "Auction/internal/config"
+	"Auction/internal/core/domain/entity"
 	"context"
 	"fmt"
 	"go.uber.org/fx"
@@ -17,7 +16,7 @@ type PgContext struct {
 
 func NewPgContext(lc fx.Lifecycle) *PgContext {
 	var mainConfig *configurations.MainConfig
-	Configuration.ReadFile(&mainConfig)
+	configurations.ReadFile(&mainConfig)
 	dsn := mainConfig.Database.ConnectionString
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {

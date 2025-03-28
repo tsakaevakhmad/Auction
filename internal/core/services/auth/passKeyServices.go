@@ -1,8 +1,8 @@
 package auth
 
 import (
-	"Auction/domain/entity"
-	"Auction/services/dbcontext"
+	dbcontext "Auction/internal/adapters/db"
+	"Auction/internal/core/domain/entity"
 	"encoding/gob"
 	"fmt"
 	"github.com/gin-contrib/sessions"
